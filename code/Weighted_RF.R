@@ -17,7 +17,7 @@ option_list <- list(
   make_option(c("-d", "--drug"), type="character", default="rifampicin",help="Insert name of drug- column name must match to metadata"),
   make_option(c("-w", "--weight_file"), type="character", default="results/rifampicin_weights.csv",help="file containing weights (csv)"),
   make_option(c("-t", "--weight_type"), type="character", default="fitch",help="Weight you would like to use, containing two columns. First should be names Mutation.)"),
-  make_option(c("-o", "--output"), type="character", default="results/rifampicin_nw",help="prefix of file to output")
+  make_option(c("-o", "--output"), type="character", default="results/rifampicin_weighted",help="prefix of file to output")
 )
 ### Parse options
 parser <- OptionParser(option_list=option_list)
