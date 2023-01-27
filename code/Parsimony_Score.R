@@ -6,8 +6,10 @@ library(data.table)
 library(optparse)
 library(dplyr)
 library(ape)
+
 ### Set seed
 set.seed(10)
+
 ### Make options
 option_list <- list(
   make_option(c("-a", "--train_dataset"), type="character", default="train_dataset.csv",help="Insert path to train dataset file (csv)"),
@@ -18,9 +20,11 @@ option_list <- list(
   make_option(c("-t", "--treefile"), type="character", default="train_dataset.tree",help="tree in newick format"),
   make_option(c("-o", "--output"), type="character", default="results/rifampicin",help="prefix of file to output")
 )
+
 ### Parse options
 parser <- OptionParser(option_list=option_list)
 opt = parse_args(parser)
+
 ### Functions
 ## Function to remove samples with missing phenotype data
 filter_missing <- function(metadata_file, geno, drug){
@@ -36,6 +40,7 @@ filter_missing <- function(metadata_file, geno, drug){
   rownames(geno) <- sample_name
   return(geno)
 }
+                
 ## Function to remove columns with MAF of 0
 filter_maf <- function(geno){
   maf <- colSums(geno[,-ncol(geno)])
@@ -46,6 +51,7 @@ filter_maf <- function(geno){
   geno <- geno[,names(geno) %in% c(rownames(maf), "phenotype")]
   return(geno)
 }
+                
 ## pre-process the tree
 preTree <- function(treefile, root_type=c("mp","og"), root_label) {
   tree <- read.tree(treefile)
@@ -62,6 +68,7 @@ preTree <- function(treefile, root_type=c("mp","og"), root_label) {
   }
   return(tree)
 }
+                
 ## Filter tree to extract isolates with available phenotype data and calculate parsimony score
 calc_fitch <- function(tree, geno){
   geno_1 <- geno[,-ncol(geno)]
@@ -76,6 +83,7 @@ calc_fitch <- function(tree, geno){
   colnames(fitch_score) <- c("Mutation", "Fitch Score")
   return(fitch_score) 
 }
+                
 ### Read in and format files
 cat(" *Formatting data\n")
 train_geno <- read.csv(opt$train_dataset, header=TRUE)
@@ -84,9 +92,11 @@ rownames(train_geno) <- sample_name
 train_geno <- filter_missing(opt$meta, train_geno, opt$drug)
 cat(" *Filtering data\n")
 train_geno <- filter_maf(train_geno)
+                
 ### Pre-process the tree
 cat(" *Pre-processing tree\n")
 phy <- preTree(treefile=opt$treefile, root_type=opt$root_type, root_label=opt$root_label)
+                
 ### Calculate the parsimony score and Save file
 cat(" *Calculating Fitch Score\n")
 fitch_score <- calc_fitch(phy, train_geno)
