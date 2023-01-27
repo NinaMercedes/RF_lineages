@@ -21,5 +21,5 @@ Rscript Parsimony_Score.R --train_dataset "global_train_dataset.csv"  --metadata
 ```
 ### Weighted Model
 ```
-Rscript Unweighted_RF.R --train_dataset "global_train_dataset.csv" --test_dataset "global_train_dataset.csv" --metadata "metadata.csv" --drug "rifampicin" --weight_file "global_weights.csv" --weight_type "fitch" --output "global_weighted"
+Rscript Weighted_RF.R --train_dataset "global_train_dataset.csv" --test_dataset "global_train_dataset.csv" --metadata "metadata.csv" --drug "rifampicin" --weight_file "global_weights.csv" --weight_type "fitch" --output "global_weighted"
 ```
