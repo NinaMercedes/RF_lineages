@@ -7,8 +7,10 @@ library(data.table)
 library(caret)
 library(ranger)
 library(MLeval)
+
 ### Set seed
 set.seed(10)
+
 ### Make options
 option_list <- list(
   make_option(c("-a", "--train_dataset"), type="character", default="train_dataset.csv",help="Insert path to train dataset file (csv)"),
@@ -17,6 +19,7 @@ option_list <- list(
   make_option(c("-d", "--drug"), type="character", default="rifampicin",help="Insert name of drug- column name must match to metadata"),
   make_option(c("-o", "--output"), type="character", default="results/rifampicin_nw",help="prefix of file to output")
 )
+
 ### Parse options
 parser <- OptionParser(option_list=option_list)
 opt = parse_args(parser)
@@ -27,6 +30,7 @@ get_pheno <- function(geno){
   pheno <- geno$phenotype
   return(pheno)
 }
+
 ## Function to remove samples with missing phenotype data
 filter_missing <- function(metadata_file, geno, drug){
   meta <- read.csv(metadata_file, header=TRUE)
@@ -41,7 +45,8 @@ filter_missing <- function(metadata_file, geno, drug){
   rownames(geno) <- sample_name
   return(geno)
 }
-## Function to remove columns with MAF of 0
+
+                ## Function to remove columns with MAF of 0
 filter_maf <- function(geno){
   maf <- colSums(geno[,-ncol(geno)])
   maf <- maf/(nrow(geno))
@@ -51,6 +56,7 @@ filter_maf <- function(geno){
   geno <-geno[,names(geno) %in% c(rownames(maf), "phenotype")]
   return(geno)
 }
+
 ## Functions to perform prediction
 # Training random forest
 perf_pred <- function(geno_train, max_depth,  model_weights, tunegrid){
@@ -63,6 +69,7 @@ perf_pred <- function(geno_train, max_depth,  model_weights, tunegrid){
     ,tuneGrid = tunegrid
     ,num.trees = 1000,  weights=model_weights, importance = "impurity", max.depth= max_depth, seed=10)
 }
+
 # Calculate class imbalance weights and fit random forest
 train_model <- function(geno_train, tunegrid){
   geno_train <- data.frame(geno_train)
@@ -72,6 +79,7 @@ train_model <- function(geno_train, tunegrid){
   fit <- perf_pred(geno_train, max_depth=10, model_weights, tunegrid)
   return(fit)
 }
+
 # Evaluate Predicition
 predict_eval <- function(geno_test, pheno_test, model){ 
   pheno_test<- factor(pheno_test, levels = c("0","1"), labels = c("S", "R"))
@@ -87,6 +95,7 @@ var_imp <- function(model, importance_file_gini){
   imp <- varImp(model)
   return(imp)
 }
+
 # Fit second model using ranger for importance threshold and interactions only
 train_model2 <- function(geno_train){
   geno_train <- data.frame(geno_train)
@@ -128,6 +137,8 @@ get_importance <- function(imp, fit,  train_geno){
   }
   return(results)
 }
+
+# Function to get frequency of interactions            
 get_interactions <- function(ranger_obj, n_trees){
   for (j in c(1:1000)){
     tree1 <- treeInfo(fit2, tree=j)
@@ -156,6 +167,7 @@ get_interactions <- function(ranger_obj, n_trees){
   child_parent_count<- setDT(child_parent_df)[,list(Count=.N),names(child_parent_df)]
   return(child_parent_count)
 }
+
 # Stage 1- read in files and format
 cat(" *Formatting training and testing data\n")
 train_geno <- read.csv(opt$train_dataset, header=TRUE)
@@ -172,8 +184,10 @@ train_geno <- filter_maf(train_geno)
 test_geno <- filter_missing(opt$metadata, test_geno, opt$drug)
 train_pheno <- get_pheno(train_geno)
 test_pheno <- get_pheno(test_geno)
-# Ensure training and testing columns match
+
+ # Ensure training and testing columns match
 test_geno <- test_geno[,colnames(test_geno) %in% colnames(train_geno)]
+
 # Tuning parameters
 cat(" *Selecting tuning parameters\n")
 n <- nrow(train_geno)
@@ -182,19 +196,23 @@ tunegrid <- expand.grid(
   min.node.size = c(1), # default for classification
   splitrule = c("extratrees","gini"))
 n.cores <- 24 # choose number of cores
+
 ## Perform initial prediction
 cat(" *Performing initial prediction\n")
 fit <- train_model(train_geno, tunegrid)
 cat(" *Estimating performance\n")
 perf_list <- predict_eval(test_geno, test_pheno, fit)
+
 ## Calculate Importance
 imp <- var_imp(fit)
 imp <- imp$importance
 write.csv(imp, paste0(opt$output,"_importance.csv"))
 write.csv(perf_list[2], paste0(opt$output,"_AUC.csv"))
+
 ## Calculate importance threshold for features
 results <-get_importance(imp, fit, train_geno)
 write.csv(results, paste0(opt$output,"_feature_threshold.csv"), row.names=FALSE)
+
 ## Get interactions
 list_df <- list()
 fit2 <- train_model2(train_geno)
