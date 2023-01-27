@@ -99,7 +99,7 @@ train_model2 <- function(geno_train){
 
 # Calculate importance threshold for features
 get_importance <- function(imp, fit,  train_geno){
-  subsets <- seq(1:50)
+  subsets <- seq(1:nrow(imp))
   imp<- data.frame(imp)
   imp$feature <- rownames(imp)
   imp <- imp[order(-imp$Overall),]
