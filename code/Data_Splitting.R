@@ -4,6 +4,7 @@ library(data.table)
 library(dplyr)
 library(optparse)
 library(caret)
+
 ## options
 option_list <- list(
   make_option(c("-a", "--dataset"), type="character", default="dataset.csv",help="Insert path to train dataset file (csv)"),
@@ -11,9 +12,11 @@ option_list <- list(
   make_option(c("-l", "--lineage"), type="character", default="global",help="lineage name, combined or global"),
   make_option(c("-o", "--output"), type="character", default="global",help="prefix of file to output")
 )
+
 ### Parse options
 parser <- OptionParser(option_list=option_list)
 opt = parse_args(parser)
+
 ## Functions
 # Perform Split
 perform_split <- function(meta, geno, output){
@@ -30,12 +33,14 @@ perform_split <- function(meta, geno, output){
   write.csv(train_geno, paste0(output, "_train_dataset.csv"), row.names=FALSE)
   write.csv(test_geno, paste0(output, "_test_dataset.csv"), row.names=FALSE)
 }
+
 # Function to filter lineage
 filter_meta_lineage <- function(meta, lineage, name_l, output){
   meta <- meta[grep(paste(lineage,collapse="|"), meta$lineage),]
   write.csv(meta, paste0(output, "_", name_l ,"_meta.csv"))
   return(meta)
 }
+
 ## Make training and testing datasets
 geno <- read.csv(opt$dataset, header=TRUE)
 rownames(geno) <- geno$X
