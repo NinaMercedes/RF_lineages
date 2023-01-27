@@ -19,9 +19,11 @@ option_list <- list(
   make_option(c("-t", "--weight_type"), type="character", default="fitch",help="Weight you would like to use, containing two columns. First should be names Mutation.)"),
   make_option(c("-o", "--output"), type="character", default="results/rifampicin_weighted",help="prefix of file to output")
 )
+
 ### Parse options
 parser <- OptionParser(option_list=option_list)
 opt = parse_args(parser)
+
 ### Functions
 ## Get phenotype data
 get_pheno <- function(geno){
@@ -29,6 +31,7 @@ get_pheno <- function(geno){
   pheno <- geno$phenotype
   return(pheno)
 }
+
 ## Function to remove samples with missing phenotype data
 filter_missing <- function(metadata_file, geno, drug){
   meta <- read.csv(metadata_file, header=TRUE)
@@ -43,10 +46,12 @@ filter_missing <- function(metadata_file, geno, drug){
   rownames(geno) <- sample_name
   return(geno)
 }
+                
 ## Function to normalize weights
 norm <- function(x) {
   return ((x - min(x, na.rm=TRUE)) / (max(x, na.rm=TRUE) - min(x, na.rm=TRUE)))
 }
+                
 ## Function to remove columns with MAF of 0
 filter_maf <- function(geno){
   maf <- colSums(geno[,-ncol(geno)])
@@ -57,12 +62,14 @@ filter_maf <- function(geno){
   geno <-geno[,names(geno) %in% c(rownames(maf), "phenotype")]
   return(geno)
 }
+                
 ## Function for converting parsimony score into probability for splitting
 norm_fitch <- function(fitch_df){
   fitch <- fitch_df %>% filter(Mutation %in% colnames(train_geno[,-ncol(train_geno)]))
   fitch$norm <- norm(fitch[,2])
   return(fitch)
 }
+                
 ## Functions to perform prediction
 # Training random forest
 perf_pred <- function(geno_train, max_depth, select_weights, model_weights, tunegrid){
@@ -75,6 +82,7 @@ perf_pred <- function(geno_train, max_depth, select_weights, model_weights, tune
     ,tuneGrid = tunegrid
     ,num.trees = 1000,  split.select.weights=select_weights, weights=model_weights, importance = "impurity", max.depth= max_depth, seed=10)
 }
+                
 # Calculate class imbalance weights and fit random forest
 train_model <- function(geno_train, fitch_weight, tunegrid){
   geno_train <- data.frame(geno_train)
@@ -84,6 +92,7 @@ train_model <- function(geno_train, fitch_weight, tunegrid){
   fit <- perf_pred(geno_train, max_depth=10, select_weights=fitch_weight, model_weights, tunegrid)
   return(fit)
 }
+                
 # Evaluate Predicition
 predict_eval <- function(geno_test, pheno_test, model){ 
   pheno_test<- factor(pheno_test, levels = c("0","1"), labels = c("S", "R"))
@@ -94,11 +103,13 @@ predict_eval <- function(geno_test, pheno_test, model){
   evaluate <- evaluate$stdres
   return(list(conf_matrix, evaluate))
 }
+                
 # Feature importance using Gini
 var_imp <- function(model, importance_file_gini){
   imp <- varImp(model)
   return(imp)
 }
+                
 # Fit second model using ranger for importance threshold and interactions only
 train_model2 <- function(geno_train, weight){
   geno_train <- data.frame(geno_train)
@@ -142,6 +153,8 @@ get_importance <- function(imp, fit,  train_geno, fw){
   }
   return(results)
 }
+                
+# Funtion to get interactions  
 get_interactions <- function(ranger_obj, n_trees){
   for (j in c(1:1000)){
     tree1 <- treeInfo(fit2, tree=j)
@@ -170,6 +183,7 @@ get_interactions <- function(ranger_obj, n_trees){
   child_parent_count<- setDT(child_parent_df)[,list(Count=.N),names(child_parent_df)]
   return(child_parent_count)
 }
+                
 # Stage 1- read in files and format
 cat(" *Formatting training and testing data\n")
 train_geno <- read.csv(opt$train_dataset, header=TRUE)
@@ -191,12 +205,14 @@ if (opt$weight_type=="fitch"){
   fitch_df <- norm_fitch(fitch_df)
   fw <- fitch_df$norm
 }
+                
 # Ensure training and testing columns match
 train_geno <- train_geno[,colnames(train_geno) %in% fitch_df$Mutation]
 train_geno <- data.frame(train_geno)
 train_geno$phenotype <- train_pheno
 test_geno <- test_geno[,colnames(test_geno) %in% colnames(train_geno)]
 test_geno <- test_geno[,!colnames(test_geno) %in% c("phenotype")]
+                
 # Tuning parameters
 cat(" *Selecting tuning parameters\n")
 n <- length(fw[!fw==0])
@@ -205,18 +221,22 @@ tunegrid <- expand.grid(
   min.node.size = c(1), # default for classification
   splitrule = c("extratrees","gini"))
 n.cores <- 24 # choose number of cores
+                
 ## Perform initial prediction
 cat(" *Performing initial prediction\n")
 fit <- train_model(train_geno, fw, tunegrid)
 perf_list <- predict_eval(test_geno, test_pheno, fit)
+                
 ## Calculate Importance
 imp <- var_imp(fit)
 imp <- imp$importance
 write.csv(imp, paste0(opt$output,"_importance.csv"))
 write.csv(perf_list[2], paste0(opt$output,"_AUC.csv"))
+                
 ## Calculate importance threshold for features
 results <-get_importance(imp, fit, train_geno, fw)
 write.csv(results, paste0(opt$output,"_feature_threshold.csv"), row.names=FALSE)
+                
 ## Get interactions
 list_df <- list()
 fit2 <- train_model2(train_geno,fw)
