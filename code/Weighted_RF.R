@@ -231,6 +231,7 @@ perf_list <- predict_eval(test_geno, test_pheno, fit)
 imp <- var_imp(fit)
 imp <- imp$importance
 write.csv(imp, paste0(opt$output,"_importance.csv"))
+write.csv(perf_list[1], paste0(opt$output,"_holdout_perf.csv"))
 write.csv(perf_list[2], paste0(opt$output,"_AUC.csv"))
                 
 ## Calculate importance threshold for features
