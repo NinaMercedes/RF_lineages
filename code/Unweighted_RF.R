@@ -85,10 +85,13 @@ predict_eval <- function(geno_test, pheno_test, model){
   pheno_test<- factor(pheno_test, levels = c("0","1"), labels = c("S", "R"))
   geno_test <- geno_test[,-ncol(geno_test)]
   pred <- predict(model, test_geno)
+  pred2 <- predict(model, test_geno, type="prob")
   conf_matrix <- confusionMatrix(pred, pheno_test, positive="R")
   evaluate <- evalm(model, showplots=FALSE)
   evaluate <- evaluate$stdres
-  return(list(conf_matrix, evaluate))
+  evaluate2 <- evalm(data.frame(pred2, pheno_test), showplots=FALSE))
+  evaluate2 <- evaluate2$stdres
+  return(list(conf_matrix, evaluate, evaluate2))
 }
 # Feature importance using Gini
 var_imp <- function(model, importance_file_gini){
@@ -210,6 +213,7 @@ write.csv(imp, paste0(opt$output,"_importance.csv"))
 write.csv(perf_list[[1]][3], paste0(opt$output,"_holdout_accuracy.csv"))
 write.csv(perf_list[[1]][4], paste0(opt$output,"_holdout_sensitivty.csv"))
 write.csv(perf_list[2], paste0(opt$output,"_AUC.csv"))
+write.csv(perf_list[3], paste0(opt$output,"_holdoutAUC.csv"))
 
 ## Calculate importance threshold for features
 results <-get_importance(imp, fit, train_geno)
