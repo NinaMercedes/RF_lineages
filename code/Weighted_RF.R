@@ -159,6 +159,7 @@ get_importance <- function(imp, fit,  train_geno, fw){
                 
 # Funtion to get interactions  
 get_interactions <- function(ranger_obj, n_trees){
+  list_df <- list()
   for (j in c(1:1000)){
     tree1 <- treeInfo(ranger_obj, tree=j)
     tree1$leftChild <- tree1$leftChild + 1
@@ -244,7 +245,6 @@ results <-get_importance(imp, fit, train_geno, fw)
 write.csv(results, paste0(opt$output,"_feature_threshold.csv"), row.names=FALSE)
                 
 ## Get interactions
-list_df <- list()
 # fit2 <- train_model2(train_geno,fw) - used to test function
 child_parent_count <- get_interactions(fit$finalModel, 1000)
 write.csv(child_parent_count, paste0(opt$output,"_interactions.csv"), row.names=FALSE)
