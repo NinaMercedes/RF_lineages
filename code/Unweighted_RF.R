@@ -221,7 +221,6 @@ results <-get_importance(imp, fit, train_geno)
 write.csv(results, paste0(opt$output,"_feature_threshold.csv"), row.names=FALSE)
 
 ## Get interactions
-list_df <- list()
 # fit2 <- train_model2(train_geno)- used to test function
 child_parent_count <- get_interactions(fit$finalModel, 1000)
 write.csv(child_parent_count, paste0(opt$output,"_interactions.csv"), row.names=FALSE)
