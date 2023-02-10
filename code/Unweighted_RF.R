@@ -99,7 +99,7 @@ var_imp <- function(model, importance_file_gini){
   return(imp)
 }
 
-# Fit second model using ranger for importance threshold and interactions only
+# Fit second model using ranger for importance threshold and interactions only (testing function)
 train_model2 <- function(geno_train){
   geno_train <- data.frame(geno_train)
   geno_train[,ncol(geno_train)] <- as.character(geno_train[,ncol(geno_train)])
@@ -221,8 +221,8 @@ write.csv(results, paste0(opt$output,"_feature_threshold.csv"), row.names=FALSE)
 
 ## Get interactions
 list_df <- list()
-fit2 <- train_model2(train_geno)
-child_parent_count <- get_interactions(fit2, 1000)
+# fit2 <- train_model2(train_geno)- used to test function
+child_parent_count <- get_interactions(fit$finalModel, 1000)
 write.csv(child_parent_count, paste0(opt$output,"_interactions.csv"), row.names=FALSE)
 
 
