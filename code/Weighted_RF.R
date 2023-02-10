@@ -64,7 +64,7 @@ filter_maf <- function(geno){
 }
                 
 ## Function for converting parsimony score into probability for splitting
-norm_fitch <- function(fitch_df){
+norm_fitch <- function(fitch_df, train_geno){
   fitch <- fitch_df %>% filter(Mutation %in% colnames(train_geno[,-ncol(train_geno)]))
   fitch$norm <- norm(fitch[,2])
   return(fitch)
@@ -206,7 +206,7 @@ train_pheno <- get_pheno(train_geno)
 test_pheno <- get_pheno(test_geno)
 if (opt$weight_type=="fitch"){
   fitch_df <- read.csv(opt$weight_file, header=TRUE)
-  fitch_df <- norm_fitch(fitch_df)
+  fitch_df <- norm_fitch(fitch_df, train_geno)
   fw <- fitch_df$norm
 }
                 
