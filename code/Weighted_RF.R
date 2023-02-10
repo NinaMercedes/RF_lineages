@@ -160,7 +160,7 @@ get_importance <- function(imp, fit,  train_geno, fw){
 # Funtion to get interactions  
 get_interactions <- function(ranger_obj, n_trees){
   for (j in c(1:1000)){
-    tree1 <- treeInfo(fit2, tree=j)
+    tree1 <- treeInfo(ranger_obj, tree=j)
     tree1$leftChild <- tree1$leftChild + 1
     tree1$rightChild <- tree1$rightChild + 1
     child_parent <- matrix(ncol=2, nrow=nrow(tree1)*2)
