@@ -81,6 +81,7 @@ calc_fitch <- function(tree, geno){
   fitch_score <- fitch[ind]
   fitch_score <- data.frame(colnames(geno_1), fitch_score)
   colnames(fitch_score) <- c("Mutation", "Fitch Score")
+  fitch_score[,2] <- fitch_score[,2]/ nrow(geno) # normalise for number of samples in tree
   return(fitch_score) 
 }
                 
