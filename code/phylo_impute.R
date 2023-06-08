@@ -68,7 +68,7 @@ geno_impute <- function(tree, geno){
   l <- data.frame()
   for (i in 1:ncol(geno)){
     for (j in rownames(geno)){
-     if (is.na(train_geno[j,i])==TRUE){
+     if (is.na(geno[j,i])==TRUE){
        y[[i]] <- x %>% filter(Var1==j) %>% filter(value==min(value)) 
        l <- y[[i]][2]
        l <- as.character(l$Var2)
